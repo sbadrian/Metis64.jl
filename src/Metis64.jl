@@ -77,7 +77,7 @@ function partGraphKway(G, nparts, ::Type{T};
     length(options)==0 || size(options)==(METIS_NOPTIONS,) || error("options must have METIS_NOPTIONS entries")
 
     # Initialize partition parameters
-    _vwgt = (length(vwgt)>0) ? compute_metis_compatible_weights(vwgt, T) : C_NULL
+    _vwgt = (length(vwgt)>0) ? round.(T, vwgt) : C_NULL
     _vsize = (length(vsize)>0) ? round.(T, vsize) : C_NULL
 
     _tpwgts = (length(tpwgts)>0) ? convert(Array{T==Int32 ? Cfloat : Cdouble}, tpwgts) : C_NULL
@@ -149,7 +149,7 @@ function partGraphRecursive(G, nparts, ::Type{T};
     length(options)==0 || size(options)==(METIS_NOPTIONS,) || error("options must have METIS_NOPTIONS entries")
 
     # Initialize partition parameters
-    _vwgt = (length(vwgt)>0) ? compute_metis_compatible_weights(vwgt, T) : C_NULL
+    _vwgt = (length(vwgt)>0) ? round.(T, vwgt) : C_NULL
     _vsize = (length(vsize)>0) ? round.(T, vsize) : C_NULL
 
     _tpwgts = (length(tpwgts)>0) ? convert(Array{T==Int32 ? Cfloat : Cdouble}, tpwgts) : C_NULL
@@ -182,23 +182,4 @@ function partGraphRecursive(G, nparts, ::Type{T};
     return err, objval[1], part
 end
 
-function compute_metis_compatible_weights(weights::Array{N}, ::Type{T}) where {N<:Real,T<:Integer}
-  if weights == 0
-    return C_NULL
-  else
-      if minimum(weights) < 0
-          error("Weights must be non-negative")
-      end
-
-      sum_weights = sum(weights)
-      vwgt = weights.*(typemax(T)/sum_weights)
-
-    #   maximum_vwgt = maximum(vwgt)
-    #   if maximum_vwgt > typemax(T)
-    #       vwgt = vwgt.*(typemax(T)/maximum_vwgt)
-    #   end
-
-      return trunc.(T, vwgt)
-  end
-end
 end # module
